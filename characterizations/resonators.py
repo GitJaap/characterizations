@@ -39,7 +39,7 @@ def estimate_hanger_pars(xdat, ydat):
     avg_ang = np.average( np.diff(np.angle(ydat)) )
     avg_ang = np.diff(np.angle(ydat))
     
-    phi_v = -np.average((avg_ang[np.abs(avg_ang)<np.pi/4]))/(np.diff(xdat)[0])
+    phi_v = np.mean(np.diff(np.unwrap(np.angle(ydat)))) / np.mean(np.diff(xdat))
         
     p0 = [xdat, f0, Ql, Qc, A, 0., phi_v, phi_0, 0.]
     #print(p0, A, s21min)
