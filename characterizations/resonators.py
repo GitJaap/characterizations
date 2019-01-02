@@ -39,13 +39,13 @@ def estimate_hanger_pars(xdat, ydat):
     avg_ang = np.average( np.diff(np.angle(ydat)) )
     avg_ang = np.diff(np.angle(ydat))
     
-    phi_v = -np.average((avg_ang[np.abs(avg_ang)<np.pi/4]))/(np.diff(xdat)[0])
-        
+    phi_v = np.mean(np.diff(np.unwrap(np.angle(ydat)))) / np.mean(np.diff(xdat))
+    
     p0 = [xdat, f0, Ql, Qc, A, 0., phi_v, phi_0, 0.]
     #print(p0, A, s21min)
     return p0
 
-def fit_hanger(xdat, ydat, slope = True, p0 = None, **kw):
+def fit_hanger(xdat, ydat, slope = True, p0 = None, fit_report=True, **kw):
     # initial guess
     if p0 is None:
         p0 = estimate_hanger_pars(xdat, ydat)
@@ -55,8 +55,9 @@ def fit_hanger(xdat, ydat, slope = True, p0 = None, **kw):
         pars['df'].vary = False
     pars['Q'].min = 0
     pars['Qe'].min = 0
-    pars.add('Qi', expr = '1/(1/Q-abs(1/Qe*cos(theta)))')
+    pars.add('Qi_deprecated', expr = '1/(1/Q-abs(1/Qe*cos(theta)))')
     pars.add('Qc', expr = 'abs(Qe/cos(theta))')
+    pars.add('Qi', expr= '1 / (1/Q - abs(1/Qe)*cos(theta))')
     
     result,  fitted_values= fit.fit(pars, ydat, hanger_model)
         
@@ -64,7 +65,10 @@ def fit_hanger(xdat, ydat, slope = True, p0 = None, **kw):
     #print(fitted_values)
     pars['Qc'].vary = True
     pars['Qi'].vary = True
-    fit_report = fit.print_fitres(pars, **kw)
+    if fit_report:
+        fit_report = fit.print_fitres(pars, **kw)
+    else:
+        fit_report = None
     return pars, result, hanger_model, fit_report
 
 def plot_results(s21m, params, hanger_model, fit_report, results, resolution = 0.05, figlab = ''):
